@@ -85,7 +85,7 @@ pct exec $VPN_CTID -- ip route add default via 10.10.10.1 dev eth0
 echo "lxc.net.0.ipv4.gateway = 10.10.10.1" >> /etc/pve/lxc/$VPN_CTID.conf
 
 # === Install WireGuard & iptables ===
-pct exec $VPN_CTID -- bash -c "apt update && apt install -y wireguard iptables iptables-persistent"
+pct exec $VPN_CTID -- bash -c "apt update && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iptables-persistent && yes | netfilter-persistent save"
 
 # === WireGuard Config Copy (host -> container) ===
 CONFIG_COUNT=$(pct exec $VPN_CTID -- bash -c "ls $WG_CONTAINER_CONFIG_DIR/*.conf 2>/dev/null | wc -l")
