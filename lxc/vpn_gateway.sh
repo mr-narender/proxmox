@@ -7,7 +7,7 @@ VPN_CTID=200
 VPN_CT_IP=10.10.10.2
 VPN_SUBNET=10.10.10.0/24
 STORAGE=local-lvm
-TEMPLATE=local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst
+TEMPLATE=$STORAGE:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst
 HOST_CONFIG_SOURCE="/root/vpn"
 WG_CONTAINER_CONFIG_DIR="/etc/wireguard/config"
 
