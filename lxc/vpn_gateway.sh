@@ -37,7 +37,7 @@ if ! ls /var/lib/vz/template/cache/$TEMPLATE &>/dev/null; then
 fi
 
 # === Create VPN Gateway LXC ===
-pct create $VPN_CTID $TEMPLATE \
+pct create $VPN_CTID local:vztmpl/$TEMPLATE \
   -hostname vpn-gateway \
   -net0 name=eth0,bridge=$VPN_BRIDGE,ip=$VPN_CT_IP/24 \
   -storage $STORAGE -memory 512 -cores 1 -unprivileged 1
@@ -115,7 +115,7 @@ if [[ $? -eq 0 ]]; then
   # clear before proceeding ahead
   clear
 
-  pct create $DOWNSTREAM_CTID $TEMPLATE \
+  pct create $DOWNSTREAM_CTID local:vztmpl/$TEMPLATE \
     -hostname vpn-client-$DOWNSTREAM_CTID \
     -net0 name=eth0,bridge=$VPN_BRIDGE,ip=${DOWNSTREAM_CT_IP}/24,gw=$VPN_CT_IP \
     -storage $STORAGE -memory 256 -cores 1 -unprivileged 1
