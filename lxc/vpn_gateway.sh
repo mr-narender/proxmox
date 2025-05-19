@@ -4,12 +4,13 @@
 set -euo pipefail;
 
 # === Configuration ===
-VPN_BRIDGE=vmbr1
-VPN_BRIDGE_IP=10.10.10.1/24
-VPN_CTID=200
-VPN_CT_IP=10.10.10.2
-VPN_SUBNET=10.10.10.0/24
-STORAGE=local-lvm
+LAN_IFACE="vmbr0"
+VPN_BRIDGE="vmbr1"
+VPN_BRIDGE_IP="10.10.10.1/24"
+VPN_CTID="200"
+VPN_CT_IP="10.10.10.2"
+VPN_SUBNET="10.10.10.0/24"
+STORAGE="local-lvm"
 TEMPLATE="debian-12-standard_12.7-1_amd64.tar.zst"
 HOST_CONFIG_SOURCE="/root/vpn"
 WG_CONTAINER_CONFIG_DIR="/etc/wireguard/config"
@@ -30,6 +31,16 @@ fi
 
 # Reload networking cleanly
 ifup $VPN_BRIDGE || (ifdown $VPN_BRIDGE && ifup $VPN_BRIDGE)
+
+# Enable NAT for VPN container
+iptables -t nat -A POSTROUTING -s $VPN_CT_IP -o $LAN_IFACE -j MASQUERADE
+
+# Allow forwarding (if not already)
+iptables -A FORWARD -s $VPN_CT_IP -o $LAN_IFACE -j ACCEPT
+iptables -A FORWARD -d $VPN_CT_IP -m state --state ESTABLISHED,RELATED -i $LAN_IFACE -j ACCEPT
+
+# Install iptables-persistent and save current rules silently
+(apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iptables-persistent && netfilter-persistent save) >/dev/null 2>&1
 
 # Download template if not present already
 if ! ls /var/lib/vz/template/cache/$TEMPLATE &>/dev/null; then
