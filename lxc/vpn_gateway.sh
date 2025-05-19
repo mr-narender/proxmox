@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# fast fail on error
+set -euo pipefail;
+
 # === Configuration ===
 VPN_BRIDGE=vmbr1
 VPN_BRIDGE_IP=10.10.10.1/24
