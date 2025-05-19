@@ -37,8 +37,11 @@ if ! ls /var/lib/vz/template/cache/$TEMPLATE &>/dev/null; then
 fi
 
 # === Remove if existing VPN Gateway LXC ===
-pct stop $VPN_CTID || true
-pct destroy $VPN_CTID --force
+if pct status $VPN_CTID &>/dev/null; then
+  echo "🧹 Removing existing container $VPN_CTID"
+  pct stop $VPN_CTID || true
+  pct destroy $VPN_CTID --force
+fi
 
 # === Create VPN Gateway LXC ===
 pct create $VPN_CTID local:vztmpl/$TEMPLATE \
@@ -120,8 +123,11 @@ if [[ $? -eq 0 ]]; then
   clear
 
   # === Remove if existing client LXC ===
-  pct stop $DOWNSTREAM_CTID || true
-  pct destroy $DOWNSTREAM_CTID --force
+  if pct status $DOWNSTREAM_CTID &>/dev/null; then
+    echo "🧹 Removing existing container $DOWNSTREAM_CTID"
+    pct stop $DOWNSTREAM_CTID || true
+    pct destroy $DOWNSTREAM_CTID --force
+  fi
 
   pct create $DOWNSTREAM_CTID local:vztmpl/$TEMPLATE \
     -hostname vpn-client-$DOWNSTREAM_CTID \
