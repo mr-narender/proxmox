@@ -74,6 +74,15 @@ pct exec $VPN_CTID -- bash -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 pct exec $VPN_CTID -- sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
 pct exec $VPN_CTID -- sysctl -p
 
+# Set DNS
+pct exec $VPN_CTID -- bash -c "echo 'nameserver 1.1.1.1' > /etc/resolv.conf"
+
+# Set default route via host bridge IP
+pct exec $VPN_CTID -- ip route add default via 10.10.10.1 dev eth0
+
+# Add gateway to container config
+echo "lxc.network.ipv4.gateway = 10.10.10.1" >> /etc/pve/lxc/$VPN_CTID.conf
+
 # === Install WireGuard & iptables ===
 pct exec $VPN_CTID -- bash -c "apt update && apt install -y wireguard iptables iptables-persistent"
 
