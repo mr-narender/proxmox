@@ -81,7 +81,7 @@ pct exec $VPN_CTID -- bash -c "echo 'nameserver 1.1.1.1' > /etc/resolv.conf"
 pct exec $VPN_CTID -- ip route add default via 10.10.10.1 dev eth0
 
 # Add gateway to container config
-echo "lxc.network.ipv4.gateway = 10.10.10.1" >> /etc/pve/lxc/$VPN_CTID.conf
+echo "lxc.net.0.ipv4.gateway = 10.10.10.1" >> /etc/pve/lxc/$VPN_CTID.conf
 
 # === Install WireGuard & iptables ===
 pct exec $VPN_CTID -- bash -c "apt update && apt install -y wireguard iptables iptables-persistent"
@@ -92,7 +92,8 @@ if [ "$CONFIG_COUNT" -eq 0 ]; then
   echo "Copying WireGuard config from host..."
   pct exec $VPN_CTID -- mkdir -p "$WG_CONTAINER_CONFIG_DIR"
   for conf in "$HOST_CONFIG_SOURCE"/*.conf; do
-    pct push $VPN_CTID "$conf" "$WG_CONTAINER_CONFIG_DIR/"
+    conf_file=$(basename "$conf")
+    pct push $VPN_CTID "$conf" "$WG_CONTAINER_CONFIG_DIR/$conf_file"
   done
 fi
 
