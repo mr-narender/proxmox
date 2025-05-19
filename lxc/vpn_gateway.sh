@@ -13,12 +13,12 @@ STORAGE=local-lvm
 TEMPLATE="debian-12-standard_12.7-1_amd64.tar.zst"
 HOST_CONFIG_SOURCE="/root/vpn"
 WG_CONTAINER_CONFIG_DIR="/etc/wireguard/config"
+BRIDGE_CONFIG_FILE="/etc/network/interfaces.d/$VPN_BRIDGE"
 
 # === Create vmbr1 if not existing already ===
-if ! grep -q "$VPN_BRIDGE" /etc/network/interfaces; then
-  echo "Creating $VPN_BRIDGE"
-  cat <<EOF >> /etc/network/interfaces
-
+if [[ ! -f "$BRIDGE_CONFIG_FILE" ]]; then
+  echo "Creating $VPN_BRIDGE config at $BRIDGE_CONFIG_FILE"
+  cat <<EOF > "$BRIDGE_CONFIG_FILE"
 auto $VPN_BRIDGE
 iface $VPN_BRIDGE inet static
     address ${VPN_BRIDGE_IP}
@@ -28,8 +28,8 @@ iface $VPN_BRIDGE inet static
 EOF
 fi
 
-# reload the bridge interface
-ifdown $VPN_BRIDGE && ifup $VPN_BRIDGE
+# Reload networking cleanly
+ifup $VPN_BRIDGE || (ifdown $VPN_BRIDGE && ifup $VPN_BRIDGE)
 
 # Download template if not present already
 if ! ls /var/lib/vz/template/cache/$TEMPLATE &>/dev/null; then
