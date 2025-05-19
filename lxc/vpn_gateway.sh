@@ -92,8 +92,7 @@ if [ "$CONFIG_COUNT" -eq 0 ]; then
   echo "Copying WireGuard config from host..."
   pct exec $VPN_CTID -- mkdir -p "$WG_CONTAINER_CONFIG_DIR"
   for conf in "$HOST_CONFIG_SOURCE"/*.conf; do
-    conf_file=$(basename "$conf")
-    pct push $VPN_CTID "$conf" "$WG_CONTAINER_CONFIG_DIR/$conf_file"
+    pct push "$VPN_CTID" "$conf" "$WG_CONTAINER_CONFIG_DIR/$(basename $conf)";
   done
 fi
 
