@@ -84,8 +84,8 @@ pct exec $VPN_CTID -- ip route add default via 10.10.10.1 dev eth0
 # Add gateway to container config
 echo "lxc.net.0.ipv4.gateway = 10.10.10.1" >> /etc/pve/lxc/$VPN_CTID.conf
 
-# === Install WireGuard & iptables ===
-pct exec $VPN_CTID -- bash -c "apt update && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iptables-persistent && yes | netfilter-persistent save"
+# === Install WireGuard, curl, jq & iptables ===
+pct exec $VPN_CTID -- bash -c "apt update && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq resolvconf iptables-persistent curl jq && yes | netfilter-persistent save"
 
 # === WireGuard Config Copy (host -> container) ===
 CONFIG_COUNT=$(pct exec $VPN_CTID -- bash -c "ls $WG_CONTAINER_CONFIG_DIR/*.conf 2>/dev/null | wc -l")
@@ -106,20 +106,22 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=/usr/bin/bash -c 'CONF=\$(ls $WG_CONTAINER_CONFIG_DIR/*.conf | shuf -n1); cp \$CONF /etc/wireguard/wg0.conf; chmod 600 /etc/wireguard/wg0.conf; wg-quick up wg0'
+EsxecStart=/usr/bin/bash -c 'cp "$(ls /etc/wireguard/config/*.conf | shuf -n1)" /etc/wireguard/wg0.conf; chmod 600 /etc/wireguard/wg0.conf; wg-quick up wg0'
 ExecStop=/usr/bin/wg-quick down wg0
-Restart=always
-RestartSec=5
-KillMode=process
+Type=oneshot
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
+# start vpn
 systemctl daemon-reexec
 systemctl daemon-reload
 systemctl enable wg-client.service
 systemctl start wg-client.service
+systemctl status wg-client.service
+curl -s https://ipinfo.io | jq -r '.ip, .city, .region, .country'
 "
 
 # === Setup NAT ===
