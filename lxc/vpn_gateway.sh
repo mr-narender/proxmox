@@ -9,7 +9,7 @@ VPN_BRIDGE_IP=10.10.10.1/24
 VPN_CTID=200
 VPN_CT_IP=10.10.10.2
 VPN_SUBNET=10.10.10.0/24
-STORAGE=local
+STORAGE=local-lvm
 TEMPLATE="debian-12-standard_12.7-1_amd64.tar.zst"
 HOST_CONFIG_SOURCE="/root/vpn"
 WG_CONTAINER_CONFIG_DIR="/etc/wireguard/config"
@@ -33,7 +33,7 @@ fi
 if ! ls /var/lib/vz/template/cache/$TEMPLATE &>/dev/null; then
   echo "📦 Downloading LXC template: $TEMPLATE"
   pveam update
-  pveam download $STORAGE $TEMPLATE
+  pveam download local $TEMPLATE
 fi
 
 # === Create VPN Gateway LXC ===
