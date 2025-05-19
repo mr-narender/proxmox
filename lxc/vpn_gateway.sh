@@ -26,6 +26,13 @@ EOF
   ifdown $VPN_BRIDGE && ifup $VPN_BRIDGE
 fi
 
+# Download template if not present already
+if ! ls /var/lib/vz/template/cache/$TEMPLATE &>/dev/null; then
+  echo "📦 Downloading LXC template: $TEMPLATE"
+  pveam update
+  pveam download $STORAGE $TEMPLATE
+fi
+
 # === Create VPN Gateway LXC ===
 pct create $VPN_CTID $TEMPLATE \
   -hostname vpn-gateway \
@@ -33,7 +40,11 @@ pct create $VPN_CTID $TEMPLATE \
   -storage $STORAGE -memory 512 -cores 1 -unprivileged 1
 
 pct start $VPN_CTID
-sleep 5
+
+# Wait until container is running and responsive to commands
+while ! pct exec $VPN_CTID -- true 2>/dev/null; do
+  sleep 1
+done
 
 # === Enable IP Forwarding ===
 pct exec $VPN_CTID -- bash -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
@@ -98,12 +109,19 @@ if [[ $? -eq 0 ]]; then
   DOWNSTREAM_CT_IP=$(dialog --stdout --inputbox "Enter Downstream Container IP (e.g. 10.10.10.10):" 8 50 "10.10.10.10")
   [[ -z "$DOWNSTREAM_CT_IP" ]] && echo "⛔ Aborted: IP missing." && exit 1
 
+  # clear before proceeding ahead
+  clear
+
   pct create $DOWNSTREAM_CTID $TEMPLATE \
     -hostname vpn-client-$DOWNSTREAM_CTID \
     -net0 name=eth0,bridge=$VPN_BRIDGE,ip=${DOWNSTREAM_CT_IP}/24,gw=$VPN_CT_IP \
     -storage $STORAGE -memory 256 -cores 1 -unprivileged 1
 
   pct start $DOWNSTREAM_CTID
+  # Wait until container is running and responsive to commands
+  while ! pct exec $DOWNSTREAM_CTID -- true 2>/dev/null; do
+    sleep 1
+  done
   echo "✅ Downstream container $DOWNSTREAM_CTID routed via VPN Gateway ($VPN_CT_IP)"
 else
   echo "⏩ Skipped downstream container creation."
