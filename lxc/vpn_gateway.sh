@@ -36,6 +36,10 @@ if ! ls /var/lib/vz/template/cache/$TEMPLATE &>/dev/null; then
   pveam download local $TEMPLATE
 fi
 
+# === Remove if existing VPN Gateway LXC ===
+pct stop $VPN_CTID || true
+pct destroy $VPN_CTID --force
+
 # === Create VPN Gateway LXC ===
 pct create $VPN_CTID local:vztmpl/$TEMPLATE \
   -hostname vpn-gateway \
@@ -114,6 +118,10 @@ if [[ $? -eq 0 ]]; then
 
   # clear before proceeding ahead
   clear
+
+  # === Remove if existing client LXC ===
+  pct stop $DOWNSTREAM_CTID || true
+  pct destroy $DOWNSTREAM_CTID --force
 
   pct create $DOWNSTREAM_CTID local:vztmpl/$TEMPLATE \
     -hostname vpn-client-$DOWNSTREAM_CTID \
