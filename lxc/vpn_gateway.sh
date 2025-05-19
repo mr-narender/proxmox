@@ -40,7 +40,7 @@ iptables -A FORWARD -s $VPN_CT_IP -o $LAN_IFACE -j ACCEPT
 iptables -A FORWARD -d $VPN_CT_IP -m state --state ESTABLISHED,RELATED -i $LAN_IFACE -j ACCEPT
 
 # Install iptables-persistent and save current rules silently
-(apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iptables-persistent && netfilter-persistent save) >/dev/null 2>&1
+(apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iptables-persistent && yes | netfilter-persistent save) >/dev/null 2>&1
 
 # Download template if not present already
 if ! ls /var/lib/vz/template/cache/$TEMPLATE &>/dev/null; then
